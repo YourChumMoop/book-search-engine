@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
+import { GraphQLError } from 'graphql';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -37,3 +37,11 @@ export const signToken = (username: string, email: string, _id: unknown) => {
 
   return jwt.sign(payload, secretKey, { expiresIn: '1h' });
 };
+
+// This lets us create a specific error for when GraphQL runs into an error
+export class AuthenticationError extends GraphQLError {
+  constructor(message: string) {
+    super(message,undefined,undefined,undefined,['UNAUTHENTICATED']);
+    Object.defineProperty(this, 'name', { value: 'AuthenticationError' });
+  }
+}
