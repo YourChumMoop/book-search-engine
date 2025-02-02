@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
-import { loginUser } from '../utils/API';
+import { LOGIN_USER } from '../utils/mutations';
+import { useMutation } from '@apollo/client';
 import Auth from '../utils/auth';
 import type { User } from '../models/User';
 
@@ -12,7 +12,7 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
   const [userFormData, setUserFormData] = useState<User>({ username: '', email: '', password: '', savedBooks: [] });
   const [validated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-
+  const [login, { error }] = useMutation(LOGIN_USER);
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setUserFormData({ ...userFormData, [name]: value });
@@ -29,14 +29,15 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
     }
 
     try {
-      const response = await loginUser(userFormData);
+      const {data} = await login({
+        variables: {...userFormData},});
 
-      if (!response.ok) {
+      if (error || !data) {
         throw new Error('something went wrong!');
       }
 
-      const { token } = await response.json();
-      Auth.login(token);
+      
+      Auth.login(data.login.token);
     } catch (err) {
       console.error(err);
       setShowAlert(true);
